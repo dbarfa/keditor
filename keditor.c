@@ -5,7 +5,12 @@
 #include <unistd.h>
 #include <termios.h>
 
+// defines
+
+#define CTRL_LEY(k) ((k) & 0x1f)
+
 struct termios orig_termios;
+
 
 void die(const char *s) {
   perror(s);
@@ -34,19 +39,40 @@ void enableRawMode() {
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw);
 }
 
+// clears the terminal
+void editorRefreshScreen(){
+  write(STDOUT_FILENO, "\x1b[2J", 4);
+  write(STDOUT_FILENO, "\x1b[H", 3);
+}
+
+char editorReadKey(){
+  int nread;
+  char c;
+  while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
+    if (nread == -1 && errno != EAGAIN) {
+      die("read");
+    }
+  }
+  return c;
+}
+
+// input
+void editorProcessKeypress(){
+  char c = editorReadKey();
+
+  switch (c) {
+    case CTRL_LEY('q'):
+    exit(0);
+    break;
+  }
+}
+
 int main() {
   enableRawMode();
 
   while(1) {
-    char c = '\0';
-    if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN) die("read");
-
-    if (iscntrl(c)) {
-      printf("%d\r\n", c);
-    } else {
-      printf("%d ('%c')\r\n", c, c);
-    }
-    if (c == 'q') break;
+    editorRefreshScreen();
+    editorProcessKeypress();
   }
 
   return 0;
