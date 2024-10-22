@@ -1,5 +1,5 @@
 OUT = ./bin/keditor
-CFLAGS = -Wall -Wextra -std=c99 -pedantic
+CFLAGS = -Wall -Wextra -std=c89 -pedantic
 
 build: create_bin_directory
 	$(CC) keditor.c -o $(OUT) $(CFLAGS)
